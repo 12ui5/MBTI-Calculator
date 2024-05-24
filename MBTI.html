@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>MBTI</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        .collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: 2px solid white;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="p-5">
+        <div class="row pb-2">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" v-model="mbtiInput">
+                    <span class="input-group-text">🔍</span>
+                </div>
+            </div>
+            <div class="col">
+                <div class="btn-group me-2" v-for="n in 4">
+                    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                      {{ selectedFunctions[n-1] == "" ? extent[n-1] : selectedFunctions[n-1] }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-item" v-for="(opp, func) in functionMap" @click="updateSelection(func, n-1)">{{ func }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <h3>Best Matches</h3>
+
+        <template v-if="selectedFunctions.join('') != '' && mbtiInput == ''">
+            <div v-for="(match, idx) of matches">
+                <button class="collapsible" type="button" data-bs-toggle="collapse" :data-bs-target="'#collapseExample' + idx" aria-expanded="false" aria-controls="collapseExample">
+                    {{match[0]}}
+                </button>
+                <div class="collapse pb-2" style="margin-left: 2px; margin-right: 2px;" :id="'collapseExample' + idx">
+                  <div class="card card-body">
+                    {{mbtiTypes[match[0]].join(", ")}}
+                  </div>
+                </div>
+            </div>
+        </template>
+        <template v-else-if="mbtiInput != ''">
+            <div v-for="(match, idx) of searchMatches">
+                <button class="collapsible" type="button" data-bs-toggle="collapse" :data-bs-target="'#collapseExample' + idx" aria-expanded="false" aria-controls="collapseExample">
+                    {{match}}
+                </button>
+                <div class="collapse pb-2" style="margin-left: 2px; margin-right: 2px;" :id="'collapseExample' + idx">
+                  <div class="card card-body">
+                    {{mbtiTypes[match].join(", ")}}
+                  </div>
+                </div>
+            </div>
+        </template>
+        <div class="pt-2" v-else>
+            <caption>No results.</caption>
+        </div>
+
+        <div class="pt-5">
+            <h3>Cognitive Functions</h3>
+            
+            <ul class="list-group pt-2">
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Se</div>
+                        Focuses on the current, and their senses to experience and react to the present environment
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Si</div>
+                        Draws from memory of past experiences and sensations to react to present or future situation
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Ne</div>
+                        Explores and derives many possibilities.
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Ni</div>
+                        Uses trends and patterns to derive the most likely conclusion.
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Te</div>
+                        Seeks facts, data and what is known to work when performing logical decisions or actions.
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Ti</div>
+                        Relies on own logical thinking and trusts internal framework. Seeks internal consistency and logic of ideas.
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Fe</div>
+                        Focuses on collective feelings and values of society.
+                    </div>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">Fi</div>
+                        Focuses on individual feelings and values.
+                    </div>
+                </li>
+            </ul>
+        </div>
+          
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp( {
+            data() {
+                return {
+                    mbtiInput: "",
+                    extent: ["Dominant", "Auxillary", "Tertiary", "Inferior"],
+                    functionMap: {
+                        "Se": "Si", 
+                        "Si": "Se", 
+                        "Ne": "Ni", 
+                        "Ni": "Ne", 
+                        "Te": "Ti", 
+                        "Ti": "Te", 
+                        "Fe": "Fi", 
+                        "Fi": "Fe"
+                    },
+                    selectedFunctions: ["", "", "", ""],
+                    mbtiTypes: {
+                        "INTP": ["Ti", "Ne", "Si", "Fe"],
+                        "ENTP": ["Ne", "Ti", "Fe", "Si"],
+                        "INFJ": ["Ni", "Fe", "Ti", "Se"],
+                        "ENFJ": ["Fe", "Ni", "Se", "Ti"],
+                        "INTJ": ["Ni", "Te", "Fi", "Se"],
+                        "ENTJ": ["Te", "Ni", "Se", "Fi"],
+                        "INFP": ["Fi", "Ne", "Si", "Te"],
+                        "ENFP": ["Ne", "Fi", "Te", "Si"],
+                        "ISTJ": ["Si", "Te", "Fi", "Ne"],
+                        "ESTJ": ["Te", "Si", "Ne", "Fi"],
+                        "ISFJ": ["Si", "Fe", "Ti", "Ne"],
+                        "ESFJ": ["Fe", "Si", "Ne", "Ti"],
+                        "ISTP": ["Ti", "Se", "Ni", "Fe"],
+                        "ESTP": ["Se", "Ti", "Fe", "Ni"],
+                        "ISFP": ["Fi", "Se", "Ni", "Te"],
+                        "ESFP": ["Se", "Fi", "Te", "Ni"]
+                    },
+                }
+            },
+            computed: {
+                searchMatches() {
+                    this.selectedFunctions = ["", "", "", ""]; 
+                    
+                    var result = [];
+                    for (const func in this.mbtiTypes) {
+                        if (func.startsWith(this.mbtiInput.trim().toUpperCase())) {
+                            result.push(func);
+                        }
+                    }
+                    return result;
+                },
+                matches() {
+                    var interResult = [];
+                    var result = [];
+
+                    for (const ptype in this.mbtiTypes) {
+                        var score = 0;
+
+                        for (const func of this.mbtiTypes[ptype]) {
+                            if (this.selectedFunctions.includes(func)) {
+                                score += 1;
+                            }
+                        }
+                        interResult.push([ptype, score]);
+                    }
+
+                    interResult.sort((a, b) => b[1] - a[1]);
+                    topScore = interResult[0][1];
+                    
+                    var result1 = [];
+                    var result2 = [];
+
+                    for (const ptypeArr of interResult) {
+                        var score2 = 0;
+                        var ptype = ptypeArr[0]
+
+                        for (var i=0; i<=3; i++) {
+                            var pos = this.selectedFunctions.indexOf(this.mbtiTypes[ptype][i]);
+                            if (pos != -1) {
+                                score2 += 4 - Math.abs(pos-i);
+                            } else {
+                                score2 -= (this.selectedFunctions.includes("") ? 0 : i+1);
+                            }
+                        }
+
+                        if (ptypeArr[1] == topScore) {
+                            result1.push([ptype, score2]);
+                        } else {
+                            result2.push([ptype, score2]);
+                        }
+                    }
+
+                    result1.sort((a, b) => b[1] - a[1]);
+                    result2.sort((a, b) => b[1] - a[1]);
+
+                    result = result1.concat(result2);
+
+                    return result.slice(0, 5);
+                }
+            },
+            methods: {
+                updateSelection(func, pos) {
+                    this.mbtiInput = "";
+                    const dupe = this.selectedFunctions.indexOf(func);
+                    if (dupe != -1) {
+                        this.selectedFunctions[dupe] = "";
+                    }
+
+                    const opp = this.selectedFunctions.indexOf(this.functionMap[func]);
+                    if (opp != -1) {
+                        this.selectedFunctions[opp] = "";
+                    }
+
+                    this.selectedFunctions[pos] = func;
+                }
+            }
+      }).mount('#app')  
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
